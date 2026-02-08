@@ -80,9 +80,15 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Oneline
+    - family: CustomIcons
+      fonts:
+        - asset: lib/assets/icons/fonts/CustomIcons.ttf
+    - family: Outline
       fonts:
         - asset: lib/assets/fonts/Outline.ttf
+    - family: Surround
+      fonts:
+        - asset: lib/assets/fonts/Surround.ttf
   # fonts:
   #   - family: Schyler
   #     fonts:

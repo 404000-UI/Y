@@ -13,7 +13,14 @@ class _HomeState extends ConsumerState<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Y", style: TextStyle(fontFamily: "Oneline")),
+        title: Text(
+          "Y",
+          style: TextStyle(
+            fontFamily: "Outline",
+            fontWeight: FontWeight.w900,
+            fontSize: 40,
+          ),
+        ),
       ),
       body: Container(),
     );

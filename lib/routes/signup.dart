@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:y/assets/icons/custom_icons_icons.dart';
+import 'package:y/routes/home.dart';
+import 'package:y/service/github_login.dart';
+import 'package:y/service/manually_login.dart';
+import 'package:y/states/user_name.dart';
 
-class Signup extends StatelessWidget {
-  const Signup({super.key});
+class SignUp extends ConsumerStatefulWidget {
+  const SignUp({super.key});
 
+  @override
+  ConsumerState createState() => _SignUpState();
+}
+
+class _SignUpState extends ConsumerState<SignUp> {
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
+    bool _isLoading = false;
+    final String userName = ref.watch(userNameProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -61,14 +73,34 @@ class Signup extends StatelessWidget {
                 SizedBox(
                   width: width * 0.8,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            try {
+                              await signInWithGitHub();
+                              if (!mounted) return;
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(builder: (context) => Home()),
+                              );
+                            } catch (e) {
+                              print(e.toString());
+                              return;
+                            } finally {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            }
+                          },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(CustomIcons.google, color: Colors.black),
+                        Icon(CustomIcons.github, color: Colors.black),
                         SizedBox(width: width * 0.03),
                         Text(
-                          "Google로 계속하기",
+                          "Github로 계속하기",
                           style: TextStyle(color: Colors.black),
                         ),
                       ],
@@ -97,7 +129,14 @@ class Signup extends StatelessWidget {
                 SizedBox(
                   width: width * 0.8,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (context) => ManuallyLogin(),
+                        ),
+                      );
+                    },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

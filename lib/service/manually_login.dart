@@ -1,4 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:y/routes/home.dart';
+import 'package:y/states/user_credential.dart';
+import 'package:y/states/user_name.dart';
 
 class ManuallyLogin extends StatelessWidget {
   const ManuallyLogin({super.key});
@@ -15,11 +20,7 @@ class ManuallyLogin extends StatelessWidget {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(height: MediaQuery.of(context).size.height * 0.17),
-            _Logo(),
-            _FormContent(),
-          ],
+          children: [_Logo(), _FormContent()],
         ),
       ),
     );
@@ -49,17 +50,40 @@ class _Logo extends StatelessWidget {
   }
 }
 
-class _FormContent extends StatefulWidget {
-  const _FormContent();
+class _FormContent extends ConsumerStatefulWidget {
+  const _FormContent({super.key});
 
   @override
-  State<_FormContent> createState() => __FormContentState();
+  ConsumerState createState() => __FormContentState();
 }
 
-class __FormContentState extends State<_FormContent> {
+class __FormContentState extends ConsumerState<_FormContent> {
   bool _isPasswordVisible = false;
+  String email = "";
+  String pw = "";
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  void _showSnackBar(
+    BuildContext context, {
+    required String message,
+    SnackBarBehavior behavior = SnackBarBehavior.fixed,
+    Duration duration = const Duration(seconds: 4),
+    Color? backgroundColor,
+    Color? textColor,
+    SnackBarAction? action,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: behavior,
+        duration: duration,
+        backgroundColor: backgroundColor,
+        action: action,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +96,11 @@ class __FormContentState extends State<_FormContent> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextFormField(
+              onChanged: (value) {
+                email = value;
+              },
+              style: TextStyle(color: Colors.white),
+              keyboardType: TextInputType.emailAddress,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter some text';
@@ -95,6 +124,10 @@ class __FormContentState extends State<_FormContent> {
             ),
             _gap(),
             TextFormField(
+              onChanged: (value) {
+                pw = value;
+              },
+              style: TextStyle(color: Colors.white),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter some text';
@@ -144,8 +177,50 @@ class __FormContentState extends State<_FormContent> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
-                onPressed: () {
-                  if (_formKey.currentState?.validate() ?? false) {}
+                onPressed: () async {
+                  if (_formKey.currentState?.validate() ?? false) {
+                    try {
+                      debugPrint('before');
+                      final credential = await FirebaseAuth.instance
+                          .createUserWithEmailAndPassword(
+                            email: email,
+                            password: pw,
+                          );
+                      debugPrint('after');
+                      ref
+                          .read(userCredentialProvider.notifier)
+                          .setUserCredential(credential);
+                      if (!context.mounted) return;
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => Home()),
+                        (route) => false,
+                      );
+                    } on FirebaseAuthException catch (e) {
+                      if (e.code == 'weak-password') {
+                        if (!context.mounted) return;
+                        _showSnackBar(
+                          context,
+                          message: 'The password provided is too weak.',
+                          duration: const Duration(seconds: 2),
+                        );
+                      } else if (e.code == 'email-already-in-use') {
+                        if (!context.mounted) return;
+                        _showSnackBar(
+                          context,
+                          message: 'The account already exists for that email.',
+                          duration: const Duration(seconds: 2),
+                        );
+                      }
+                    } catch (e) {
+                      if (!mounted) return;
+                      _showSnackBar(
+                        context,
+                        message: e.toString(),
+                        duration: const Duration(seconds: 2),
+                      );
+                    }
+                  }
                 },
               ),
             ),

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:y/components/mail.dart';
+import 'package:y/components/notification.dart';
+import 'package:y/components/post.dart';
+import 'package:y/components/search.dart';
 import 'package:y/main.dart';
+import 'package:y/routes/post_tweets.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key, required this.userEmail});
@@ -70,7 +75,7 @@ class _HomeState extends State<Home> {
         ],
       ),
       drawer: isLargeScreen ? null : _drawer(),
-      body: const Center(child: Text("Body")),
+      body: _bodyComponents[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.black,
@@ -79,13 +84,27 @@ class _HomeState extends State<Home> {
         items: _bottomNavBarItems,
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          if (index == 2) {
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (context) => PostTweets()));
+          } else {
+            setState(() {
+              _currentIndex = index;
+            });
+          }
         },
       ),
     );
   }
+
+  final _bodyComponents = [
+    PostComponent(),
+    SearchComponent(),
+    Container(),
+    NotificationComponent(),
+    MailComponent(),
+  ];
 
   final _bottomNavBarItems = [
     BottomNavigationBarItem(

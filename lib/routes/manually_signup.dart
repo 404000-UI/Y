@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:y/routes/home.dart';
 import 'package:y/states/user_credential.dart';
-import 'package:y/states/user_name.dart';
 
-class ManuallyLogin extends StatelessWidget {
-  const ManuallyLogin({super.key});
+class ManuallySignUp extends StatelessWidget {
+  const ManuallySignUp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final bool isSmallScreen = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
       appBar: AppBar(
@@ -51,8 +49,6 @@ class _Logo extends StatelessWidget {
 }
 
 class _FormContent extends ConsumerStatefulWidget {
-  const _FormContent({super.key});
-
   @override
   ConsumerState createState() => __FormContentState();
 }
@@ -70,7 +66,6 @@ class __FormContentState extends ConsumerState<_FormContent> {
     SnackBarBehavior behavior = SnackBarBehavior.fixed,
     Duration duration = const Duration(seconds: 4),
     Color? backgroundColor,
-    Color? textColor,
     SnackBarAction? action,
   }) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -188,12 +183,12 @@ class __FormContentState extends ConsumerState<_FormContent> {
                           );
                       debugPrint('after');
                       ref
-                          .read(userCredentialProvider.notifier)
-                          .setUserCredential(credential);
+                          .read(userEmailProvider.notifier)
+                          .setUserCredential(email);
                       if (!context.mounted) return;
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => Home()),
+                        MaterialPageRoute(builder: (context) => Home(userEmail: email.toString(),)),
                         (route) => false,
                       );
                     } on FirebaseAuthException catch (e) {

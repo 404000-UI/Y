@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:y/assets/icons/custom_icons_icons.dart';
 import 'package:y/routes/home.dart';
+import 'package:y/routes/manually_login.dart';
 import 'package:y/service/github_login.dart';
-import 'package:y/service/manually_login.dart';
-import 'package:y/states/user_name.dart';
+import 'package:y/routes/manually_signup.dart';
 
 class SignUp extends ConsumerStatefulWidget {
   const SignUp({super.key});
@@ -14,11 +14,30 @@ class SignUp extends ConsumerStatefulWidget {
 }
 
 class _SignUpState extends ConsumerState<SignUp> {
+  void _showSnackBar(
+    BuildContext context, {
+    required String message,
+    SnackBarBehavior behavior = SnackBarBehavior.fixed,
+    Duration duration = const Duration(seconds: 4),
+    Color? backgroundColor,
+    SnackBarAction? action,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: behavior,
+        duration: duration,
+        backgroundColor: backgroundColor,
+        action: action,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double width = MediaQuery.of(context).size.width;
     bool _isLoading = false;
-    final String userName = ref.watch(userNameProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -80,13 +99,22 @@ class _SignUpState extends ConsumerState<SignUp> {
                               _isLoading = true;
                             });
                             try {
-                              await signInWithGitHub();
-                              if (!mounted) return;
+                              final user = await signInWithGitHub();
+                              if (!context.mounted) return;
                               Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (context) => Home()),
+                                MaterialPageRoute(
+                                  builder: (context) => Home(
+                                    userEmail: user.user!.email.toString(),
+                                  ),
+                                ),
                               );
                             } catch (e) {
-                              print(e.toString());
+                              if (!context.mounted) return;
+                              _showSnackBar(
+                                context,
+                                message: e.toString(),
+                                duration: const Duration(seconds: 2),
+                              );
                               return;
                             } finally {
                               setState(() {
@@ -133,7 +161,7 @@ class _SignUpState extends ConsumerState<SignUp> {
                       Navigator.push(
                         context,
                         MaterialPageRoute<void>(
-                          builder: (context) => ManuallyLogin(),
+                          builder: (context) => ManuallySignUp(),
                         ),
                       );
                     },
@@ -174,14 +202,26 @@ class _SignUpState extends ConsumerState<SignUp> {
                     ],
                   ),
                   Padding(
-                    padding: EdgeInsetsGeometry.fromLTRB(0, 0, 0, 25),
+                    padding: EdgeInsetsGeometry.fromLTRB(0, 0, 0, 10),
                     child: Row(
                       children: [
                         Text(
                           "이미 계정이 있으신가요? ",
                           style: TextStyle(color: Colors.grey),
                         ),
-                        Text("로그인하기", style: TextStyle(color: Colors.blue)),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ManuallyLogin(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            "로그인하기",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
                       ],
                     ),
                   ),

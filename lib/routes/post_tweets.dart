@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:y/main.dart';
+import 'package:y/routes/home.dart';
+import 'package:y/service/firestore.dart';
 
 class PostTweets extends StatefulWidget {
   const PostTweets({super.key});
@@ -38,7 +41,19 @@ class _PostTweetsState extends State<PostTweets> {
             Padding(
               padding: EdgeInsetsGeometry.symmetric(horizontal: 8),
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  FirestoreService().setDateAtPostCollection(
+                    userEmail.toString(),
+                    userInput,
+                  );
+                  _controller.clear();
+                  Navigator.of(context).pop(
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          Home(userEmail: userEmail.toString()),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _btnEnabled ? Colors.blue : Colors.blueGrey,
                 ),

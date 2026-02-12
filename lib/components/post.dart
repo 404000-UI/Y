@@ -1,10 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:y/main.dart';
+import 'package:y/routes/edit_tweet.dart';
+import 'package:y/service/firestore.dart';
+import 'package:y/states/user_credential.dart';
 
-class PostComponent extends StatelessWidget {
-  const PostComponent({super.key});
+late List<Map<String, dynamic>> data;
+
+class PostComponent extends StatefulWidget {
+  const PostComponent({super.key, required this.userEmail});
+
+  final String userEmail;
+
+  @override
+  State<PostComponent> createState() => _PostComponentState();
+}
+
+class _PostComponentState extends State<PostComponent> {
+  bool isLoading = true;
+
+  Future<void> _init() async {
+    data = await FirestoreService().getAllPosts();
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
     return DefaultTabController(
       length: 2,
       child: Padding(
@@ -21,7 +54,14 @@ class PostComponent extends StatelessWidget {
                 Tab(text: "Following"),
               ],
             ),
-            Expanded(child: TabBarView(children: [_ForYou(), _Following()])),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _ForYou(userEmail: userEmail.toString()),
+                  _Following(),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -30,7 +70,9 @@ class PostComponent extends StatelessWidget {
 }
 
 class _ForYou extends StatefulWidget {
-  const _ForYou({super.key});
+  const _ForYou({super.key, required this.userEmail});
+
+  final String userEmail;
 
   @override
   State<_ForYou> createState() => _ForYouState();
@@ -41,39 +83,46 @@ class _ForYouState extends State<_ForYou> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsetsGeometry.symmetric(vertical: 18),
-      child: ListView(
-        children: [
-          _CardComponent(
-            author: "minkwan",
-            content: "Hi",
-            likes: 3,
-            commentsLength: 5,
-          ),
-        ],
+      child: ListView.builder(
+        itemCount: data.length,
+        itemBuilder: (context, index) {
+          final item = data[index];
+          return _CardComponent(
+            author: item["author"],
+            userEmail: userEmail.toString(),
+            content: item["content"],
+            likes: item["likes"],
+            commentsLength: item["commentsLength"],
+          );
+        },
       ),
     );
   }
 }
 
-class _CardComponent extends StatefulWidget {
+class _CardComponent extends ConsumerStatefulWidget {
   const _CardComponent({
     super.key,
     required this.author,
+    required this.userEmail,
     required this.content,
     required this.likes,
     required this.commentsLength,
   });
 
   final String author;
+  final String userEmail;
   final String content;
   final int likes;
   final int commentsLength;
 
   @override
-  State<_CardComponent> createState() => _CardComponentState();
+  ConsumerState createState() => __CardComponentState();
 }
 
-class _CardComponentState extends State<_CardComponent> {
+enum MenuType { Edit, Delete }
+
+class __CardComponentState extends ConsumerState<_CardComponent> {
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -122,7 +171,70 @@ class _CardComponentState extends State<_CardComponent> {
               ],
             ),
             Spacer(),
-            Icon(Icons.more_vert),
+            userEmail == widget.author
+                ? PopupMenuButton<MenuType>(
+                    onSelected: (MenuType result) async {
+                      if (result.name.toString() == "Edit") {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                EditTweet(content: widget.content),
+                          ),
+                        );
+                      } else {
+                        final result = await showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text("Are you sure?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text("Cancel"),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    FirestoreService().deleteContent(
+                                      userEmail.toString(),
+                                      widget.content,
+                                    );
+                                    Navigator.of(context).pop();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("Click a Refresh Button"),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    "Delete",
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        if (result == true) {
+                          print('사용자가 확인 클릭');
+                          // 여기서 Firestore 삭제 등 작업 가능
+                        } else {
+                          print('사용자가 취소 클릭');
+                        }
+                      }
+                    },
+                    itemBuilder: (BuildContext buildContext) {
+                      return [
+                        for (final value in MenuType.values)
+                          PopupMenuItem(
+                            value: value,
+                            child: Text(value.name.toString()),
+                          ),
+                      ];
+                    },
+                  )
+                : Container(),
           ],
         ),
       ),

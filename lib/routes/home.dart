@@ -19,6 +19,14 @@ class _HomeState extends State<Home> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
 
+  final _bodyComponents = [
+    PostComponent(userEmail: userEmail.toString()),
+    SearchComponent(),
+    Container(),
+    NotificationComponent(),
+    MailComponent(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -76,6 +84,22 @@ class _HomeState extends State<Home> {
       ),
       drawer: isLargeScreen ? null : _drawer(),
       body: _bodyComponents[_currentIndex],
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (context) => Home(userEmail: userEmail.toString()),
+                  ),
+                  (route) => false,
+                );
+              },
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Icon(Icons.restart_alt_outlined),
+            )
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.black,
@@ -97,14 +121,6 @@ class _HomeState extends State<Home> {
       ),
     );
   }
-
-  final _bodyComponents = [
-    PostComponent(),
-    SearchComponent(),
-    Container(),
-    NotificationComponent(),
-    MailComponent(),
-  ];
 
   final _bottomNavBarItems = [
     BottomNavigationBarItem(

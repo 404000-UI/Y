@@ -7,10 +7,20 @@ import 'package:y/routes/home.dart';
 import 'package:y/routes/signup.dart';
 
 bool isLogin = false;
+late String? userEmail;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    if (user == null) {
+      isLogin = false;
+    } else {
+      isLogin = true;
+      userEmail = user.email.toString();
+    }
+  });
+
   runApp(ProviderScope(child: Main()));
 }
 
@@ -22,7 +32,7 @@ class Main extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(scaffoldBackgroundColor: Colors.black),
-      home: isLogin ? Home() : SignUp(),
+      home: isLogin ? Home(userEmail: userEmail.toString()) : SignUp(),
     );
   }
 }

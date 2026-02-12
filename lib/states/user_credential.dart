@@ -1,18 +1,22 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final userCredentialProvider =
-    NotifierProvider<UserCredentialState, UserCredential?>(
-      UserCredentialState.new,
-    );
+final userEmailProvider = NotifierProvider<UserEmailState, String>(
+  UserEmailState.new,
+);
 
-class UserCredentialState extends Notifier<UserCredential?> {
-  @override
-  UserCredential? build() {
-    return null;
+class UserEmailState extends Notifier<String> {
+  final String initialEmail;
+
+  UserEmailState([this.initialEmail = ""]) {
+    state = initialEmail;
   }
 
-  void setUserCredential(UserCredential userCredential) {
-    state = userCredential;
+  @override
+  String build() {
+    return state;
+  }
+
+  void setUserCredential(String email) {
+    state = email;
   }
 }

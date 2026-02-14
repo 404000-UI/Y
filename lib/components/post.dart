@@ -1,10 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:y/main.dart';
+import 'package:y/routes/edit_tweet.dart';
+import 'package:y/routes/home.dart';
+import 'package:y/service/firestore.dart';
 
-class PostComponent extends StatelessWidget {
-  const PostComponent({super.key});
+late List<Map<String, dynamic>> data;
+
+class PostComponent extends StatefulWidget {
+  const PostComponent({super.key, required this.userEmail});
+
+  final String userEmail;
+
+  @override
+  State<PostComponent> createState() => _PostComponentState();
+}
+
+class _PostComponentState extends State<PostComponent> {
+  bool isLoading = true;
+
+  Future<void> _init() async {
+    data = await FirestoreService().getAllPosts();
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
     return DefaultTabController(
       length: 2,
       child: Padding(
@@ -21,7 +54,14 @@ class PostComponent extends StatelessWidget {
                 Tab(text: "Following"),
               ],
             ),
-            Expanded(child: TabBarView(children: [_ForYou(), _Following()])),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _ForYou(userEmail: userEmail.toString()),
+                  _Following(),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -30,7 +70,9 @@ class PostComponent extends StatelessWidget {
 }
 
 class _ForYou extends StatefulWidget {
-  const _ForYou({super.key});
+  const _ForYou({super.key, required this.userEmail});
+
+  final String userEmail;
 
   @override
   State<_ForYou> createState() => _ForYouState();
@@ -39,41 +81,59 @@ class _ForYou extends StatefulWidget {
 class _ForYouState extends State<_ForYou> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsetsGeometry.symmetric(vertical: 18),
-      child: ListView(
-        children: [
-          _CardComponent(
-            author: "minkwan",
-            content: "Hi",
-            likes: 3,
-            commentsLength: 5,
+    return RefreshIndicator.adaptive(
+      onRefresh: () async {
+        await Future.delayed(Duration(seconds: 1));
+        if (!context.mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => Home(userEmail: userEmail.toString()),
           ),
-        ],
+          (route) => false,
+        );
+      },
+      child: ListView.builder(
+        padding: EdgeInsetsGeometry.symmetric(vertical: 18),
+        physics: AlwaysScrollableScrollPhysics(),
+        itemCount: data.length,
+        itemBuilder: (context, index) {
+          final item = data[index];
+          return _CardComponent(
+            author: item["author"],
+            userEmail: userEmail.toString(),
+            content: item["content"],
+            likes: item["likes"],
+            commentsLength: item["commentsLength"],
+          );
+        },
       ),
     );
   }
 }
 
-class _CardComponent extends StatefulWidget {
+class _CardComponent extends ConsumerStatefulWidget {
   const _CardComponent({
     super.key,
     required this.author,
+    required this.userEmail,
     required this.content,
     required this.likes,
     required this.commentsLength,
   });
 
   final String author;
+  final String userEmail;
   final String content;
   final int likes;
   final int commentsLength;
 
   @override
-  State<_CardComponent> createState() => _CardComponentState();
+  ConsumerState createState() => __CardComponentState();
 }
 
-class _CardComponentState extends State<_CardComponent> {
+enum MenuType { Edit, Delete }
+
+class __CardComponentState extends ConsumerState<_CardComponent> {
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -122,7 +182,69 @@ class _CardComponentState extends State<_CardComponent> {
               ],
             ),
             Spacer(),
-            Icon(Icons.more_vert),
+            userEmail == widget.author
+                ? PopupMenuButton<MenuType>(
+                    onSelected: (MenuType result) async {
+                      if (result.name.toString() == "Edit") {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                EditTweet(content: widget.content),
+                          ),
+                          (route) => false,
+                        );
+                      } else {
+                        await showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text("Are you sure?"),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text("Cancel"),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    await FirestoreService().deleteContent(
+                                      userEmail.toString(),
+                                      widget.content,
+                                    );
+                                    Duration(seconds: 1);
+                                    if (!context.mounted) return;
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) => Home(
+                                          userEmail: userEmail.toString(),
+                                        ),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  },
+                                  child: Text(
+                                    "Delete",
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      }
+                    },
+                    itemBuilder: (BuildContext buildContext) {
+                      return [
+                        for (final value in MenuType.values)
+                          PopupMenuItem(
+                            value: value,
+                            child: Text(value.name.toString()),
+                          ),
+                      ];
+                    },
+                  )
+                : Container(),
           ],
         ),
       ),

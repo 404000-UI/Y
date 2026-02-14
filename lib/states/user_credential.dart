@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final userEmailProvider =
-    NotifierProvider<UserEmailState, String>(
-      UserEmailState.new,
-    );
+final userEmailProvider = NotifierProvider<UserEmailState, String>(
+  UserEmailState.new,
+);
 
 class UserEmailState extends Notifier<String> {
   @override

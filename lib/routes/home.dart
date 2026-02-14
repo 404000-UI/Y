@@ -19,6 +19,14 @@ class _HomeState extends State<Home> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
 
+  final _bodyComponents = [
+    PostComponent(userEmail: userEmail.toString()),
+    SearchComponent(),
+    Container(),
+    NotificationComponent(),
+    MailComponent(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -97,14 +105,6 @@ class _HomeState extends State<Home> {
       ),
     );
   }
-
-  final _bodyComponents = [
-    PostComponent(),
-    SearchComponent(),
-    Container(),
-    NotificationComponent(),
-    MailComponent(),
-  ];
 
   final _bottomNavBarItems = [
     BottomNavigationBarItem(

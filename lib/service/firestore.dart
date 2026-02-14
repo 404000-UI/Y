@@ -5,9 +5,10 @@ class FirestoreService {
 
   void setDateAtPostCollection(String userEmail, String content) {
     final date = <String, dynamic>{
-      "user": userEmail,
+      "author": userEmail,
       "content": content,
       "likes": 0,
+      "commentsLength": 0,
     };
 
     _db.collection("posts").doc(DateTime.now().toString()).set(date);
@@ -22,5 +23,31 @@ class FirestoreService {
       datas.add(data);
     }
     return datas;
+  }
+
+  Future<void> setContents(
+    String userEmail,
+    String oldContent,
+    String newContent,
+  ) async {
+    final docs = await _db.collection("posts").get();
+
+    for (var doc in docs.docs) {
+      if (doc.data()["author"] == userEmail &&
+          doc.data()["content"] == oldContent) {
+        doc.reference.update({"content": newContent});
+      }
+    }
+  }
+
+  Future<void> deleteContent(String userEmail, String content) async {
+    final docs = await _db.collection("posts").get();
+
+    for (var doc in docs.docs) {
+      if (doc.data()["author"] == userEmail &&
+          doc.data()["content"] == content) {
+        doc.reference.delete();
+      }
+    }
   }
 }

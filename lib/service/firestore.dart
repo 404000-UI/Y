@@ -21,12 +21,11 @@ class FirestoreService {
     for (var doc in docs.docs) {
       Map<String, dynamic> data = doc.data();
       datas.add(data);
-      print(doc.id);
     }
     return datas;
   }
 
-  void setContents(
+  Future<void> setContents(
     String userEmail,
     String oldContent,
     String newContent,
@@ -41,7 +40,7 @@ class FirestoreService {
     }
   }
 
-  void deleteContent(String userEmail, String content) async {
+  Future<void> deleteContent(String userEmail, String content) async {
     final docs = await _db.collection("posts").get();
 
     for (var doc in docs.docs) {

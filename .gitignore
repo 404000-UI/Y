@@ -33,6 +33,11 @@ migrate_working_dir/
 /build/
 /coverage/
 
+/firebase.option.dart
+/android/app/google-service.json
+/firebase.json
+/.gitignore
+
 # Symbolication related
 app.*.symbols
 

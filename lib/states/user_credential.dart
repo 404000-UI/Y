@@ -5,15 +5,9 @@ final userEmailProvider = NotifierProvider<UserEmailState, String>(
 );
 
 class UserEmailState extends Notifier<String> {
-  final String initialEmail;
-
-  UserEmailState([this.initialEmail = ""]) {
-    state = initialEmail;
-  }
-
   @override
   String build() {
-    return state;
+    return "";
   }
 
   void setUserCredential(String email) {

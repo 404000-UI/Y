@@ -84,22 +84,6 @@ class _HomeState extends State<Home> {
       ),
       drawer: isLargeScreen ? null : _drawer(),
       body: _bodyComponents[_currentIndex],
-      floatingActionButton: _currentIndex == 0
-          ? FloatingActionButton(
-              onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (context) => Home(userEmail: userEmail.toString()),
-                  ),
-                  (route) => false,
-                );
-              },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Icon(Icons.restart_alt_outlined),
-            )
-          : null,
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.black,

@@ -40,11 +40,12 @@ class _EditTweetState extends State<EditTweet> {
               child: TextButton(
                 onPressed: () {
                   _controller.clear();
-                  Navigator.of(context).pop(
+                  Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (context) =>
                           Home(userEmail: userEmail.toString()),
                     ),
+                    (route) => false,
                   );
                 },
                 child: Text("Cancel", style: TextStyle(color: Colors.blue)),
@@ -60,14 +61,12 @@ class _EditTweetState extends State<EditTweet> {
                     userInput,
                   );
                   _controller.clear();
-                  Navigator.of(context).pop(
+                  Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (context) =>
                           Home(userEmail: userEmail.toString()),
                     ),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Click a Refresh Button")),
+                    (route) => false,
                   );
                 },
                 style: ElevatedButton.styleFrom(

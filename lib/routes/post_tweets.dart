@@ -41,20 +41,18 @@ class _PostTweetsState extends State<PostTweets> {
             Padding(
               padding: EdgeInsetsGeometry.symmetric(horizontal: 8),
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   FirestoreService().setDateAtPostCollection(
                     userEmail.toString(),
                     userInput,
                   );
                   _controller.clear();
-                  Navigator.of(context).pop(
+                  Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (context) =>
                           Home(userEmail: userEmail.toString()),
                     ),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Click a Refresh Button")),
+                    (route) => false,
                   );
                 },
                 style: ElevatedButton.styleFrom(

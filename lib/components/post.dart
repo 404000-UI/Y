@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:y/main.dart';
 import 'package:y/routes/edit_tweet.dart';
+import 'package:y/routes/home.dart';
 import 'package:y/service/firestore.dart';
-import 'package:y/states/user_credential.dart';
 
 late List<Map<String, dynamic>> data;
 
@@ -81,9 +81,20 @@ class _ForYou extends StatefulWidget {
 class _ForYouState extends State<_ForYou> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsetsGeometry.symmetric(vertical: 18),
+    return RefreshIndicator.adaptive(
+      onRefresh: () async {
+        await Future.delayed(Duration(seconds: 1));
+        if (!context.mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => Home(userEmail: userEmail.toString()),
+          ),
+          (route) => false,
+        );
+      },
       child: ListView.builder(
+        padding: EdgeInsetsGeometry.symmetric(vertical: 18),
+        physics: AlwaysScrollableScrollPhysics(),
         itemCount: data.length,
         itemBuilder: (context, index) {
           final item = data[index];
@@ -175,14 +186,15 @@ class __CardComponentState extends ConsumerState<_CardComponent> {
                 ? PopupMenuButton<MenuType>(
                     onSelected: (MenuType result) async {
                       if (result.name.toString() == "Edit") {
-                        Navigator.of(context).push(
+                        Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(
                             builder: (context) =>
                                 EditTweet(content: widget.content),
                           ),
+                          (route) => false,
                         );
                       } else {
-                        final result = await showDialog(
+                        await showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
@@ -195,16 +207,20 @@ class __CardComponentState extends ConsumerState<_CardComponent> {
                                   child: Text("Cancel"),
                                 ),
                                 TextButton(
-                                  onPressed: () {
-                                    FirestoreService().deleteContent(
+                                  onPressed: () async {
+                                    await FirestoreService().deleteContent(
                                       userEmail.toString(),
                                       widget.content,
                                     );
-                                    Navigator.of(context).pop();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text("Click a Refresh Button"),
+                                    Duration(seconds: 1);
+                                    if (!context.mounted) return;
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (context) => Home(
+                                          userEmail: userEmail.toString(),
+                                        ),
                                       ),
+                                      (route) => false,
                                     );
                                   },
                                   child: Text(
@@ -216,12 +232,6 @@ class __CardComponentState extends ConsumerState<_CardComponent> {
                             );
                           },
                         );
-                        if (result == true) {
-                          print('사용자가 확인 클릭');
-                          // 여기서 Firestore 삭제 등 작업 가능
-                        } else {
-                          print('사용자가 취소 클릭');
-                        }
                       }
                     },
                     itemBuilder: (BuildContext buildContext) {

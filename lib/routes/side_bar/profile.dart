@@ -162,7 +162,7 @@ class _TopPortion extends StatelessWidget {
                       image: DecorationImage(
                         fit: BoxFit.cover,
                         image: NetworkImage(
-                          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
+                          'https://instagram.fcjb3-4.fna.fbcdn.net/v/t51.2885-19/573323465_1219825463302212_7278921664109726296_n.png?stp=dst-jpg_e0_s150x150_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xNTAuYzIifQ&_nc_ht=instagram.fcjb3-4.fna.fbcdn.net&_nc_cat=1&_nc_oc=Q6cZ2QGX02fFJTdwbbvBKbEKS77DngHfHuCrImm-xUd59mcvdgLzCKpkYHcgjztJ_q2HZ0A5t_-baN0F1zDqOtWmKJK8&_nc_ohc=eQeo-gpIgOcQ7kNvwHQCPUf&_nc_gid=FzsCDXqO-NILVLqeU84puQ&edm=AL4D0a4BAAAA&ccb=7-5&ig_cache_key=YW5vbnltb3VzX3Byb2ZpbGVfcGlj.3-ccb7-5&oh=00_AftfRPVAm-z3MIkb2n7UFDHLSIzryPXPZwVhZaFn5zcMZA&oe=699737EA&_nc_sid=9e8221',
                         ),
                       ),
                     ),

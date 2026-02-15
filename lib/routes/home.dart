@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:y/components/mail.dart';
 import 'package:y/components/notification.dart';
 import 'package:y/components/post.dart';
 import 'package:y/components/search.dart';
 import 'package:y/main.dart';
 import 'package:y/routes/post_tweets.dart';
+import 'package:y/routes/side_bar/profile.dart';
+import 'package:y/states/user_credential.dart';
 
-class Home extends StatefulWidget {
+class Home extends ConsumerStatefulWidget {
   const Home({super.key, required this.userEmail});
 
   final String userEmail;
 
   @override
-  State<Home> createState() => _HomeState();
+  ConsumerState<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends ConsumerState<Home> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
 
@@ -48,7 +51,12 @@ class _HomeState extends State<Home> {
                     color: Colors.white,
                     size: 40.0,
                   ),
-                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                  onPressed: () {
+                    _scaffoldKey.currentState?.openDrawer();
+                    ref
+                        .read(userEmailProvider.notifier)
+                        .setUserCredential(userEmail.toString());
+                  },
                 ),
               ),
         title: Padding(
@@ -222,17 +230,25 @@ class _HomeState extends State<Home> {
             ],
           ),
         ),
-        ..._menuItems.map(
-          (item) => ListTile(
+        ..._menuItems.asMap().entries.map((entry) {
+          final item = entry.value;
+          final index = entry.key;
+
+          return ListTile(
             onTap: () {
               _scaffoldKey.currentState?.openEndDrawer();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => _menuRoutes[index]),
+              );
             },
             title: item,
-          ),
-        ),
+          );
+        }),
       ],
     ),
   );
+
+  final List<Widget> _menuRoutes = <Widget>[Profile()];
 
   final List<Row> _menuItems = <Row>[
     Row(

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:y/main.dart';
+import 'package:y/routes/edit_profile.dart';
 import 'package:y/service/firestore.dart';
 import 'package:y/states/user_credential.dart';
+
+import '../../components/post_card.dart';
 
 class Profile extends ConsumerStatefulWidget {
   const Profile({super.key});
@@ -10,93 +14,137 @@ class Profile extends ConsumerStatefulWidget {
   ConsumerState<Profile> createState() => _ProfileState();
 }
 
+final profileDataProvider = FutureProvider((ref) async {
+  final String userEmail = ref.watch(userEmailProvider);
+
+  final List<Map<String, dynamic>> posts = await FirestoreService().getOwnPosts(
+    userEmail,
+  );
+  final String userId = await FirestoreService().getUserId(userEmail);
+
+  return {
+    "posts": posts,
+    "userEmail": userEmail.toString(),
+    "userId": userId.toString(),
+  };
+});
+
 class _ProfileState extends ConsumerState<Profile> {
-  late final List<Map<String, dynamic>> datas;
-  late final userEmail = ref.watch(userEmailProvider);
-
-  void _init() async {
-    datas = await FirestoreService().getOwnPosts(userEmail);
-  }
-
   @override
   void initState() {
-    _init();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.refresh(profileDataProvider);
+    });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final userId = "userId";
+    final profile = ref.watch(profileDataProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.black,
-        iconTheme: IconThemeData(color: Colors.white),
-        title: Text(
-          userId,
-          style: TextStyle(color: Colors.white, fontFamily: "Outline"),
-        ),
-      ),
-      body: Column(
-        children: [
-          const Expanded(flex: 1, child: _TopPortion()),
-          Expanded(
-            flex: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+    return profile.when(
+      loading: () => Center(child: CircularProgressIndicator()),
+      error: (e, _) => Text("Error $e"),
+      data: (data) {
+        final posts = data["posts"] as List<Map<String, dynamic>>;
+        final userEmail = data["userEmail"] as String;
+        final userId = data["userId"] as String;
+
+        return Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            backgroundColor: Colors.black,
+            iconTheme: IconThemeData(color: Colors.white),
+            title: Text(
+              userId,
+              style: TextStyle(color: Colors.white, fontFamily: "Outline"),
+            ),
+          ),
+          body: Column(
+            children: [
+              Expanded(
+                flex: 1,
+                child: _TopPortion(userId: userId, userEmail: userEmail),
+              ),
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
                     children: [
-                      Padding(
-                        padding: EdgeInsetsGeometry.symmetric(horizontal: 30),
-                        child: Text(
-                          userEmail,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsetsGeometry.symmetric(
+                              horizontal: 30,
+                            ),
+                            child: Text(
+                              userEmail,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                      SizedBox(height: 24),
+                      _ProfileInfoRow(postsLength: posts.length),
+                      Expanded(
+                        child: ListView.builder(
+                          padding: EdgeInsetsGeometry.symmetric(vertical: 18),
+                          physics: AlwaysScrollableScrollPhysics(),
+                          itemCount: posts.length,
+                          itemBuilder: (context, index) {
+                            final item = posts[index];
+                            return CardComponent(
+                              author: item["author"],
+                              userEmail: userEmail.toString(),
+                              content: item["content"],
+                              likes: item["likes"],
+                              commentsLength: item["commentsLength"],
+                            );
+                          },
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  const _ProfileInfoRow(),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _ProfileInfoRow extends StatelessWidget {
-  const _ProfileInfoRow();
+  const _ProfileInfoRow({required this.postsLength});
 
-  final List<ProfileInfoItem> _items = const [
-    ProfileInfoItem("Posts", 0),
-    ProfileInfoItem("Followers", 0),
-    ProfileInfoItem("Following", 0),
-  ];
+  final int postsLength;
 
   @override
   Widget build(BuildContext context) {
+    final List<ProfileInfoItem> items = [
+      ProfileInfoItem("Posts", postsLength),
+      ProfileInfoItem("Followers", 0),
+      ProfileInfoItem("Following", 0),
+    ];
+
     return Container(
       height: 80,
       constraints: const BoxConstraints(maxWidth: 400),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: _items
+        children: items
             .map(
               (item) => Expanded(
                 child: Row(
                   children: [
-                    if (_items.indexOf(item) != 0) const VerticalDivider(),
+                    if (items.indexOf(item) != 0) const VerticalDivider(),
                     Expanded(child: _singleItem(context, item)),
                   ],
                 ),
@@ -134,7 +182,10 @@ class ProfileInfoItem {
 }
 
 class _TopPortion extends StatelessWidget {
-  const _TopPortion();
+  const _TopPortion({required this.userId, required this.userEmail});
+
+  final String userId;
+  final String userEmail;
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +228,14 @@ class _TopPortion extends StatelessWidget {
           child: Align(
             alignment: Alignment.bottomRight,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        EditProfile(userId: userId, userEmail: userEmail),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 side: BorderSide(color: Colors.white),

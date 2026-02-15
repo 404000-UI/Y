@@ -50,4 +50,17 @@ class FirestoreService {
       }
     }
   }
+
+  Future<List<Map<String, dynamic>>> getOwnPosts(String userEmail) async {
+    List<Map<String, dynamic>> result = [];
+    final docs = await _db.collection("posts").get();
+
+    for (var doc in docs.docs) {
+      if (doc.data()["author"] == userEmail) {
+        result.add(doc.data());
+      }
+    }
+
+    return result;
+  }
 }

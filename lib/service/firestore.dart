@@ -63,4 +63,20 @@ class FirestoreService {
 
     return result;
   }
+
+  Future<String> getUserId(String userEmail) async {
+    final ids = await _db.collection("users").doc("userIds").get();
+    final data = ids.data();
+
+    if (data == null) return userEmail;
+    return data[userEmail] ?? userEmail;
+  }
+
+  Future<void> upsertUserId(String userEmail, String userId) async {
+    if (userEmail == await getUserId(userEmail)) {
+      await _db.collection("users").doc("userIds").set({userEmail: userId});
+    } else {
+      await _db.collection("users").doc("userIds").update({userEmail: userId});
+    }
+  }
 }

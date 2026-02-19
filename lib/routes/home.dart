@@ -6,7 +6,17 @@ import 'package:y/components/post.dart';
 import 'package:y/components/search.dart';
 import 'package:y/main.dart';
 import 'package:y/routes/post_tweets.dart';
+import 'package:y/routes/side_bar/ads.dart';
+import 'package:y/routes/side_bar/bookmarks.dart';
+import 'package:y/routes/side_bar/business.dart';
+import 'package:y/routes/side_bar/communities.dart';
+import 'package:y/routes/side_bar/creator_studio.dart';
+import 'package:y/routes/side_bar/follow.dart';
+import 'package:y/routes/side_bar/lists.dart';
+import 'package:y/routes/side_bar/log_out.dart';
+import 'package:y/routes/side_bar/premium.dart';
 import 'package:y/routes/side_bar/profile.dart';
+import 'package:y/routes/side_bar/settings_and_privacy.dart';
 import 'package:y/states/user_credential.dart';
 
 class Home extends ConsumerStatefulWidget {
@@ -248,7 +258,19 @@ class _HomeState extends ConsumerState<Home> {
     ),
   );
 
-  final List<Widget> _menuRoutes = <Widget>[Profile()];
+  final List<Widget> _menuRoutes = <Widget>[
+    Profile(),
+    Follow(),
+    Premium(),
+    Lists(),
+    Communities(),
+    Bookmarks(),
+    CreatorStudio(),
+    Business(),
+    Ads(),
+    SettingsAndPrivacy(),
+    LogOut(),
+  ];
 
   final List<Row> _menuItems = <Row>[
     Row(
